@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v5
       # Install and checksum-verify the OPA/Cedar binaries required by your manifest.
       - name: Review MCP changes across policy planes
-        uses: ExpressPath/mcp-policy-change-review@bb6b99882dce587948b50354cde649b804e457e6
+        uses: ExpressPath/mcp-policy-change-review@fa5a14b68df3d1b20527b861d09ee163919ee660
         with:
           manifest: examples/multi-plane/mcp-multi-review.json
           require-common-cases: 'true'
@@ -40,7 +40,7 @@ jobs:
           fail-on-candidate-divergence: 'true'
 ```
 
-This example pins the immutable full commit SHA for the published pre-release `v0.1.0`; review any later commit before updating it. Copy `examples/multi-plane/` into your workflow repository because the Action reads the manifest, policy, fixture, and snapshot files from that checkout. Pin third-party Actions and policy-engine downloads to versions reviewed under your organization's secure-use policy.
+This example pins the immutable full commit SHA for the published pre-release `v0.1.1` (`fa5a14b68df3d1b20527b861d09ee163919ee660`); review any later commit before updating it. Copy `examples/multi-plane/` into your workflow repository because the Action reads the manifest, policy, fixture, and snapshot files from that checkout. Pin third-party Actions and policy-engine downloads to versions reviewed under your organization's secure-use policy.
 
 ## Manifest
 
@@ -62,4 +62,4 @@ The source is available under [Apache-2.0](LICENSE). The separate [End User Lice
 
 ## Current release state
 
-The immutable `v0.1.1` pre-release is published on GitHub, and the [GitHub Marketplace listing](https://github.com/marketplace/actions/mcp-policy-change-review) is live. `v0.1.0` remains available as an earlier pre-release. The listing is third-party software, not GitHub-verified. Do not use `@main` as a production dependency. On 2026-11-05, the [GitHub-hosted synthetic release smoke](https://github.com/ExpressPath/mcp-policy-change-review/actions/runs/41874974382) passed on `ubuntu-24.04`: it checksum-verified official OPA 1.22.0 and Cedar 4.14.1 binaries, passed both bundled examples through the Action, and confirmed that the deliberate OPA drift fixture exits with failure. On 2026-11-04, local synthetic OPA and Cedar examples also passed, and an outside-workspace path was rejected. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
+The immutable `v0.1.1` pre-release is published on [GitHub Releases](https://github.com/ExpressPath/mcp-policy-change-review/releases/tag/v0.1.1), and the [GitHub Marketplace listing](https://github.com/marketplace/actions/mcp-policy-change-review) is live. `v0.1.0` remains available as an earlier pre-release. GitHub labels this as third-party software; it is not GitHub-certified. Do not use `@main` as a production dependency. On 2026-11-05, the [GitHub-hosted synthetic release smoke](https://github.com/ExpressPath/mcp-policy-change-review/actions/runs/41874974382) passed on `ubuntu-24.04`: it checksum-verified official OPA 1.22.0 and Cedar 4.14.1 binaries, passed both bundled examples through the Action, and confirmed that the deliberate OPA drift fixture exits with failure. On 2026-11-04, local synthetic OPA and Cedar examples also passed, and an outside-workspace path was rejected. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
