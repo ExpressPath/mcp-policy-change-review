@@ -1,0 +1,83 @@
+name: Synthetic release smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  action-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install official OPA release
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://github.com/open-policy-agent/opa/releases/download/v1.22.0/opa_linux_amd64'
+          expected='ab4d4f59b3f2e64bfc8b4bde7a1eeb2eb08480dffea685b4bd8297c553769a3a'
+          curl --fail --location --silent --show-error --retry 3 "$url" --output "$RUNNER_TEMP/opa"
+          printf '%s  %s\n' "$expected" "$RUNNER_TEMP/opa" | sha256sum --check --status
+          chmod 0755 "$RUNNER_TEMP/opa"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/opa" version
+
+      - name: Install official Cedar CLI release
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://github.com/cedar-policy/cedar/releases/download/cedar-policy-cli-v4.14.1/cedar-policy-cli-x86_64-unknown-linux-gnu.tar.xz'
+          expected='5833e9f4734eac0d95b3dab7ae119a9212caf0a82e02720b989e2fce6f3bfdad'
+          archive="$RUNNER_TEMP/cedar-policy-cli.tar.xz"
+          curl --fail --location --silent --show-error --retry 3 "$url" --output "$archive"
+          printf '%s  %s\n' "$expected" "$archive" | sha256sum --check --status
+          mkdir -p "$RUNNER_TEMP/cedar"
+          tar -xJf "$archive" --strip-components=1 -C "$RUNNER_TEMP/cedar"
+          chmod 0755 "$RUNNER_TEMP/cedar/cedar"
+          echo "$RUNNER_TEMP/cedar" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/cedar/cedar" --version
+
+      - name: Review synthetic OPA planes with this Action
+        uses: ./
+        with:
+          manifest: examples/multi-plane/mcp-multi-review.json
+          require-common-cases: 'true'
+          require-policy-coverage: 'true'
+          fail-on-unexpected-new-allow: 'true'
+
+      - name: Review synthetic Cedar planes with this Action
+        uses: ./
+        with:
+          manifest: examples/multi-plane/mcp-multi-review-cedar.json
+          require-common-cases: 'true'
+          require-policy-coverage: 'true'
+          fail-on-unexpected-new-allow: 'true'
+
+      - name: Confirm intentional OPA regression is rejected
+        id: expected-drift
+        uses: ./
+        continue-on-error: true
+        with:
+          manifest: examples/multi-plane/mcp-multi-review-drift.json
+          require-common-cases: 'true'
+          require-policy-coverage: 'true'
+          fail-on-unexpected-new-allow: 'true'
+          fail-on-candidate-divergence: 'true'
+
+      - name: Assert regression result
+        shell: bash
+        env:
+          DRIFT_OUTCOME: ${{ steps.expected-drift.outcome }}
+          DRIFT_EXIT_CODE: ${{ steps.expected-drift.outputs.exit-code }}
+        run: |
+          set -euo pipefail
+          test "$DRIFT_OUTCOME" = failure
+          test "$DRIFT_EXIT_CODE" = 1
