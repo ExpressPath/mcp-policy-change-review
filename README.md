@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v5
       # Install and checksum-verify the OPA/Cedar binaries required by your manifest.
       - name: Review MCP changes across policy planes
-        uses: ExpressPath/mcp-policy-change-review@fa5a14b68df3d1b20527b861d09ee163919ee660
+        uses: ExpressPath/mcp-policy-change-review@9c8a8db9e5fea7b108606ff9f66d119184149ba3
         with:
           manifest: examples/multi-plane/mcp-multi-review.json
           require-common-cases: 'true'
@@ -41,7 +41,7 @@ jobs:
           report-file: mcp-policy-review.json
 ```
 
-This example pins the immutable full commit SHA for the published pre-release `v0.1.1` (`fa5a14b68df3d1b20527b861d09ee163919ee660`); review any later commit before updating it. Copy `examples/multi-plane/` into your workflow repository because the Action reads the manifest, policy, fixture, and snapshot files from that checkout. Pin third-party Actions and policy-engine downloads to versions reviewed under your organization's secure-use policy.
+This example pins the immutable full commit SHA `9c8a8db9e5fea7b108606ff9f66d119184149ba3`, which includes the optional machine-readable report output; review any later commit before updating it. Copy `examples/multi-plane/` into your workflow repository because the Action reads the manifest, policy, fixture, and snapshot files from that checkout. Pin third-party Actions and policy-engine downloads to versions reviewed under your organization's secure-use policy.
 
 When `report-file` is set and all policy-plane executions complete, the Action writes the complete machine-readable JSON report to a new path inside `GITHUB_WORKSPACE` while still adding the human-readable summary to the job. The parent directory must already exist, the target file must not exist, and the Action will not overwrite it. Engine execution errors still produce the human-readable summary but do not produce a JSON file. The `report-path` output contains the supplied path for completed reviews; upload it only through a separate workflow step if your repository's evidence-retention policy allows that. The report contains case IDs, decisions, change summaries, and hashes, but no raw policies or fixtures. Its fingerprint is unsigned and is not an approval or provenance attestation.
 
@@ -65,4 +65,4 @@ The source is available under [Apache-2.0](LICENSE). The separate [End User Lice
 
 ## Current release state
 
-The immutable `v0.1.1` pre-release is published on [GitHub Releases](https://github.com/ExpressPath/mcp-policy-change-review/releases/tag/v0.1.1), and the [GitHub Marketplace listing](https://github.com/marketplace/actions/mcp-policy-change-review) is live. `v0.1.0` remains available as an earlier pre-release. GitHub labels this as third-party software; it is not GitHub-certified. Do not use `@main` as a production dependency. On 2026-11-05, the [GitHub-hosted synthetic release smoke](https://github.com/ExpressPath/mcp-policy-change-review/actions/runs/41874974382) passed on `ubuntu-24.04`: it checksum-verified official OPA 1.22.0 and Cedar 4.14.1 binaries, passed both bundled examples through the Action, and confirmed that the deliberate OPA drift fixture exits with failure. On 2026-11-04, local synthetic OPA and Cedar examples also passed, and an outside-workspace path was rejected. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
+The [GitHub Marketplace listing](https://github.com/marketplace/actions/mcp-policy-change-review) and published releases are the source of truth for the latest version. GitHub labels this as third-party software; it is not GitHub-certified. Do not use `@main` as a production dependency. On 2026-11-05, the [GitHub-hosted synthetic release smoke](https://github.com/ExpressPath/mcp-policy-change-review/actions/runs/41935535200) passed on `ubuntu-24.04` for commit `9c8a8db9e5fea7b108606ff9f66d119184149ba3`: it checksum-verified official OPA 1.22.0 and Cedar 4.14.1 binaries, passed both bundled examples through the Action, validated JSON reports for passing and failing policy results, and confirmed rejection of path escapes and overwrites. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
