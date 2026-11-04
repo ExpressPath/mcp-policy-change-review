@@ -1,8 +1,10 @@
 # MCP Policy Change Review
 
+[![Synthetic release smoke](https://github.com/ExpressPath/mcp-policy-change-review/actions/workflows/synthetic-release-smoke.yml/badge.svg)](https://github.com/ExpressPath/mcp-policy-change-review/actions/workflows/synthetic-release-smoke.yml)
+
 An early GitHub Action prototype for reviewing MCP tool-inventory changes and replaying the same authorization scenarios against separately managed OPA or Cedar policy planes.
 
-It is designed for organizations that cannot consolidate every agent runtime, MCP gateway, and policy engine. It does not connect to MCP servers or gateways, enforce live tool calls, sign evidence, or prove production security. The bundled cross-plane example uses synthetic data. Multi-plane Cedar and customer-repository installs have not been validated.
+It is designed for organizations that cannot consolidate every agent runtime, MCP gateway, and policy engine. It does not connect to MCP servers or gateways, enforce live tool calls, sign evidence, or prove production security. The bundled examples use synthetic data. GitHub-hosted runner execution has been validated against the bundled OPA and Cedar examples; customer-repository installs have not been validated.
 
 ## What the action checks
 
@@ -60,4 +62,4 @@ The source is available under [Apache-2.0](LICENSE). The separate [End User Lice
 
 ## Current release state
 
-The immutable `v0.1.0` pre-release is published on GitHub, but the GitHub Marketplace listing is not yet published. Do not use `@main` as a production dependency. On 2026-11-04, local synthetic OPA 1.22.0 and Cedar 4.14.1 multi-plane examples passed through the Action entrypoint; the deliberate OPA drift sample failed as expected, and an outside-workspace path was rejected. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
+The immutable `v0.1.0` pre-release is published on GitHub, but the GitHub Marketplace listing is not yet published. Do not use `@main` as a production dependency. On 2026-11-05, the [GitHub-hosted synthetic release smoke](https://github.com/ExpressPath/mcp-policy-change-review/actions/runs/41874974382) passed on `ubuntu-24.04`: it checksum-verified official OPA 1.22.0 and Cedar 4.14.1 binaries, passed both bundled examples through the Action, and confirmed that the deliberate OPA drift fixture exits with failure. On 2026-11-04, local synthetic OPA and Cedar examples also passed, and an outside-workspace path was rejected. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
