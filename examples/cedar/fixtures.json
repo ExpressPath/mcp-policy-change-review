@@ -1,0 +1,143 @@
+{
+  "version": "1",
+  "pack": {
+    "id": "agent-policy-lab/cedar-agent-baseline",
+    "version": "0.1.0",
+    "title": "Cedar Agent Authorization Example",
+    "description": "Synthetic Cedar cases for identity, repository scope, and MCP tool identity.",
+    "source": "Local synthetic example"
+  },
+  "subjects": {},
+  "fixtures": [
+    {
+      "id": "CEDAR-001",
+      "category": "scope",
+      "severity": "medium",
+      "rationale": "An active repository reader may read a repository in its organization.",
+      "name": "active reader in organization",
+      "subject": null,
+      "tool": "mcp://workspace-code/read_file",
+      "action": "read",
+      "resource": "repo:acme/api",
+      "mcp": {
+        "server_id": "mcp://workspace-code",
+        "tool_name": "read_file",
+        "annotations_trusted": false,
+        "annotations": { "readOnlyHint": true }
+      },
+      "expected": "allow",
+      "cedar_input": {
+        "request": {
+          "principal": "User::\"engineer-1\"",
+          "action": "Action::\"read\"",
+          "resource": "Repo::\"acme/api\"",
+          "context": { "server_id": "mcp://workspace-code", "tool_name": "read_file" }
+        }
+      }
+    },
+    {
+      "id": "CEDAR-002",
+      "category": "scope",
+      "severity": "high",
+      "rationale": "A matching role must not grant access to another organization.",
+      "name": "reader outside organization",
+      "subject": null,
+      "tool": "mcp://workspace-code/read_file",
+      "action": "read",
+      "resource": "repo:other/api",
+      "mcp": {
+        "server_id": "mcp://workspace-code",
+        "tool_name": "read_file",
+        "annotations_trusted": false,
+        "annotations": { "readOnlyHint": true }
+      },
+      "expected": "deny",
+      "cedar_input": {
+        "request": {
+          "principal": "User::\"engineer-1\"",
+          "action": "Action::\"read\"",
+          "resource": "Repo::\"other/api\"",
+          "context": { "server_id": "mcp://workspace-code", "tool_name": "read_file" }
+        }
+      }
+    },
+    {
+      "id": "CEDAR-003",
+      "category": "identity-lifecycle",
+      "severity": "high",
+      "rationale": "An inactive principal must not retain read access.",
+      "name": "inactive principal denied",
+      "subject": null,
+      "tool": "mcp://workspace-code/read_file",
+      "action": "read",
+      "resource": "repo:acme/api",
+      "mcp": {
+        "server_id": "mcp://workspace-code",
+        "tool_name": "read_file",
+        "annotations_trusted": false,
+        "annotations": { "readOnlyHint": true }
+      },
+      "expected": "deny",
+      "cedar_input": {
+        "request": {
+          "principal": "User::\"disabled-engineer\"",
+          "action": "Action::\"read\"",
+          "resource": "Repo::\"acme/api\"",
+          "context": { "server_id": "mcp://workspace-code", "tool_name": "read_file" }
+        }
+      }
+    },
+    {
+      "id": "CEDAR-004",
+      "category": "destructive-action",
+      "severity": "critical",
+      "rationale": "The read-only Cedar policy must deny the added delete operation.",
+      "name": "delete operation is denied",
+      "subject": null,
+      "tool": "mcp://workspace-code/delete_file",
+      "action": "delete",
+      "resource": "repo:acme/api",
+      "mcp": {
+        "server_id": "mcp://workspace-code",
+        "tool_name": "delete_file",
+        "annotations_trusted": false,
+        "annotations": { "readOnlyHint": false, "destructiveHint": true }
+      },
+      "expected": "deny",
+      "cedar_input": {
+        "request": {
+          "principal": "User::\"engineer-1\"",
+          "action": "Action::\"delete\"",
+          "resource": "Repo::\"acme/api\"",
+          "context": { "server_id": "mcp://workspace-code", "tool_name": "delete_file" }
+        }
+      }
+    },
+    {
+      "id": "CEDAR-005",
+      "category": "mcp-tool-identity",
+      "severity": "high",
+      "rationale": "The read_file grant must remain bound to that exact tool identity.",
+      "name": "another tool cannot inherit the read grant",
+      "subject": null,
+      "tool": "mcp://workspace-code/delete_file",
+      "action": "read",
+      "resource": "repo:acme/api",
+      "mcp": {
+        "server_id": "mcp://workspace-code",
+        "tool_name": "delete_file",
+        "annotations_trusted": false,
+        "annotations": { "readOnlyHint": false, "destructiveHint": true }
+      },
+      "expected": "deny",
+      "cedar_input": {
+        "request": {
+          "principal": "User::\"engineer-1\"",
+          "action": "Action::\"read\"",
+          "resource": "Repo::\"acme/api\"",
+          "context": { "server_id": "mcp://workspace-code", "tool_name": "delete_file" }
+        }
+      }
+    }
+  ]
+}

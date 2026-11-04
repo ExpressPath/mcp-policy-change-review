@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
@@ -163,11 +163,23 @@ function evaluate(policyFile, fixture, files, label, enginePaths) {
   ];
   if (enginePaths.schemaPath) args.push('--schema', enginePaths.schemaPath, '--schema-format', schemaFormat);
   if (enginePaths.templateLinkedPath) args.push('--template-linked', enginePaths.templateLinkedPath);
-  const raw = execFileSync(cedarBinary, args, {
+  const result = spawnSync(cedarBinary, args, {
     encoding: 'utf8', env: cedarEnvironment, maxBuffer: 2_000_000, timeout: timeoutMs, windowsHide: true,
   });
+  if (result.error) throw result.error;
+  const stdout = String(result.stdout ?? '');
+  const stderr = String(result.stderr ?? '').trim();
+  if (result.signal || result.status === null) {
+    throw new Error(stderr || stdout.trim() || `Cedar process ended without an exit status${result.signal ? ` (signal ${result.signal})` : ''}.`);
+  }
   try {
-    return parseCedarOutput(raw);
+    const parsed = parseCedarOutput(stdout);
+    const expectedExitStatus = parsed.decision === 'allow' ? 0 : 2;
+    if (result.status !== expectedExitStatus) {
+      const detail = stderr || `Cedar returned ${parsed.decision.toUpperCase()} with unexpected exit code ${result.status} (expected ${expectedExitStatus}).`;
+      throw new Error(detail);
+    }
+    return parsed;
   } catch (error) {
     throw new Error(`${label} policy returned an unsupported result for "${fixture.name}": ${error instanceof Error ? error.message : String(error)}`);
   }

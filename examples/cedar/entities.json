@@ -1,0 +1,32 @@
+[
+  {
+    "uid": { "type": "User", "id": "engineer-1" },
+    "attrs": { "active": true, "roles": ["repo-reader"] },
+    "parents": []
+  },
+  {
+    "uid": { "type": "User", "id": "disabled-engineer" },
+    "attrs": { "active": false, "roles": ["repo-reader"] },
+    "parents": []
+  },
+  {
+    "uid": { "type": "Action", "id": "read" },
+    "attrs": {},
+    "parents": []
+  },
+  {
+    "uid": { "type": "Action", "id": "delete" },
+    "attrs": {},
+    "parents": []
+  },
+  {
+    "uid": { "type": "Repo", "id": "acme/api" },
+    "attrs": { "organization": "acme" },
+    "parents": []
+  },
+  {
+    "uid": { "type": "Repo", "id": "other/api" },
+    "attrs": { "organization": "other" },
+    "parents": []
+  }
+]

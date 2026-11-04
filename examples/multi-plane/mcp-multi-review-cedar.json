@@ -1,0 +1,27 @@
+{
+  "version": "1",
+  "control_planes": [
+    {
+      "id": "cedar-north",
+      "label": "North Cedar plane",
+      "engine": "cedar",
+      "baseline_snapshot": "../mcp/baseline.json",
+      "candidate_snapshot": "../mcp/candidate.json",
+      "baseline_policy": "../cedar/access.cedar",
+      "policy": "../cedar/access.cedar",
+      "fixtures": "../cedar/fixtures.json",
+      "options": { "entities": "../cedar/entities.json", "timeout_ms": 10000 }
+    },
+    {
+      "id": "cedar-south",
+      "label": "South Cedar plane",
+      "engine": "cedar",
+      "baseline_snapshot": "../mcp/baseline.json",
+      "candidate_snapshot": "../mcp/candidate.json",
+      "baseline_policy": "../cedar/access.cedar",
+      "policy": "../cedar/access.cedar",
+      "fixtures": "../cedar/fixtures.json",
+      "options": { "entities": "../cedar/entities.json", "timeout_ms": 10000 }
+    }
+  ]
+}

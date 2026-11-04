@@ -42,7 +42,7 @@ Replace the owner/repository and placeholder SHA after a public release. Pin thi
 
 ## Manifest
 
-The [sample manifest](examples/mcp-multi-review.json) runs the same synthetic scenarios against two separately configured OPA planes. Its companion [`mcp-multi-review-drift.json`](examples/mcp-multi-review-drift.json) contains an intentional regional over-permission regression. Run the CLI with `--format github` to see the report locally.
+The [OPA sample manifest](examples/multi-plane/mcp-multi-review.json) runs the same synthetic scenarios against two separately configured OPA planes. Its companion [`mcp-multi-review-drift.json`](examples/multi-plane/mcp-multi-review-drift.json) contains an intentional regional over-permission regression. The [Cedar sample manifest](examples/multi-plane/mcp-multi-review-cedar.json) runs the same synthetic MCP inventory change and five Cedar scenarios in two separately named policy planes. Run either manifest with `--format github` to see the report locally.
 
 Each manifest supports 2–32 control planes. Relative paths resolve from the manifest file; absolute paths are also accepted when they remain inside `GITHUB_WORKSPACE`. The action canonicalizes paths and rejects a manifest, policy, fixture, snapshot, or data path that resolves outside the checked-out workspace, including a symlink that points outside it. Each plane provides baseline and candidate MCP snapshots, baseline and candidate policies, a fixture file, and optional OPA/Cedar-specific settings. Fixture `id` values must mean the same authorization scenario in each plane; the action does not infer scenario equivalence.
 
@@ -60,4 +60,4 @@ The source is available under [Apache-2.0](LICENSE). The separate [End User Lice
 
 ## Current release state
 
-This is a public pre-release candidate, not a versioned release or published Marketplace listing. Do not use `@main` as a production dependency. Clean-install evidence, multi-plane Cedar validation, security review beyond static self-review, a versioned release, and GitHub Marketplace Developer Agreement acceptance remain outstanding. No customer has validated the workflow or willingness to pay.
+This is a public pre-release candidate, not a versioned release or published Marketplace listing. Do not use `@main` as a production dependency. On 2026-11-04, local synthetic OPA 1.22.0 and Cedar 4.14.1 multi-plane examples passed through the Action entrypoint; the deliberate OPA drift sample failed as expected, and an outside-workspace path was rejected. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
