@@ -1,0 +1,42 @@
+name: MCP Policy Change Review
+description: Compare MCP tool changes and authorization decisions across separate OPA or Cedar policy planes
+author: Agent Policy Lab
+branding:
+  icon: shield
+  color: blue
+inputs:
+  manifest:
+    description: Version 1 manifest describing two or more independent policy planes
+    required: true
+  require-common-cases:
+    description: Require every scenario ID to be present in every policy plane
+    required: false
+    default: 'true'
+  require-policy-coverage:
+    description: Require passing mapped cases for every changed tool
+    required: false
+    default: 'true'
+  fail-on-unexpected-new-allow:
+    description: Fail when a plane introduces an unexpected allow decision
+    required: false
+    default: 'true'
+  fail-on-any-policy-change:
+    description: Fail when any plane changes an authorization decision
+    required: false
+    default: 'false'
+  fail-on-candidate-divergence:
+    description: Fail when a shared scenario has different candidate decisions across planes
+    required: false
+    default: 'false'
+  fail-on-transition-divergence:
+    description: Fail when a shared scenario has different baseline-to-candidate transitions
+    required: false
+    default: 'false'
+outputs:
+  passed:
+    description: Whether every policy plane review and configured gate passed
+  exit-code:
+    description: Exit code from the multi-plane review command
+runs:
+  using: node24
+  main: actions/multi-review/index.js

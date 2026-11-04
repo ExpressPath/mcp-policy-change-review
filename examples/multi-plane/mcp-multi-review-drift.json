@@ -1,0 +1,31 @@
+{
+  "version": "1",
+  "control_planes": [
+    {
+      "id": "core",
+      "label": "Core engineering policy",
+      "engine": "opa",
+      "baseline_snapshot": "../mcp/baseline.json",
+      "candidate_snapshot": "../mcp/candidate.json",
+      "baseline_policy": "../../policy/agent_policy.rego",
+      "policy": "../../policy/agent_policy.rego",
+      "fixtures": "../mcp/review-fixtures.json",
+      "options": {
+        "query": "data.agent_policy.decision"
+      }
+    },
+    {
+      "id": "regional",
+      "label": "Regional engineering policy",
+      "engine": "opa",
+      "baseline_snapshot": "../mcp/baseline.json",
+      "candidate_snapshot": "../mcp/candidate.json",
+      "baseline_policy": "../../policy/agent_policy.rego",
+      "policy": "./regional-candidate.rego",
+      "fixtures": "../mcp/review-fixtures.json",
+      "options": {
+        "query": "data.agent_policy.decision"
+      }
+    }
+  ]
+}

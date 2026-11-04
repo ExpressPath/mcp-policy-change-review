@@ -1,0 +1,30 @@
+{
+  "version": "1",
+  "servers": [
+    {
+      "server_id": "mcp://workspace-code",
+      "tools": [
+        {
+          "name": "read_file",
+          "description": "Read a file from the workspace.",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "path": { "type": "string" } },
+            "required": ["path"]
+          },
+          "annotations": { "readOnlyHint": true }
+        },
+        {
+          "name": "write_file",
+          "description": "Write a file in the workspace.",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "path": { "type": "string" }, "content": { "type": "string" } },
+            "required": ["path", "content"]
+          },
+          "annotations": { "readOnlyHint": false }
+        }
+      ]
+    }
+  ]
+}

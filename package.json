@@ -1,0 +1,7 @@
+{
+  "name": "mcp-policy-change-review-action",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "GitHub Action for local MCP change review across OPA and Cedar policy planes"
+}

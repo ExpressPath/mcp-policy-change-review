@@ -1,0 +1,58 @@
+{
+  "version": "1",
+  "pack": {
+    "id": "agent-policy-lab/mcp-change-review-example",
+    "version": "1.0.0",
+    "title": "MCP Change Review Example",
+    "description": "Synthetic authorization cases mapped to the sample MCP inventory."
+  },
+  "subjects": {
+    "repo": {
+      "id": "fixture-repo-agent",
+      "status": "active",
+      "allowed_tools": [
+        "mcp://workspace-code/read_file",
+        "mcp://workspace-code/write_file"
+      ],
+      "scopes": ["repo:acme/*"]
+    }
+  },
+  "fixtures": [
+    {
+      "id": "MCP-REV-001",
+      "category": "tool-change-coverage",
+      "severity": "high",
+      "rationale": "The changed read tool remains limited to the approved repository scope.",
+      "name": "scoped read tool remains allowed",
+      "subject": "repo",
+      "tool": "mcp://workspace-code/read_file",
+      "action": "read",
+      "resource": "repo:acme/api",
+      "mcp": {
+        "server_id": "mcp://workspace-code",
+        "tool_name": "read_file",
+        "annotations_trusted": false,
+        "annotations": { "readOnlyHint": true }
+      },
+      "expected": "allow"
+    },
+    {
+      "id": "MCP-REV-002",
+      "category": "tool-change-coverage",
+      "severity": "critical",
+      "rationale": "A newly exposed destructive tool remains denied until the agent is explicitly granted it.",
+      "name": "new delete tool stays unregistered",
+      "subject": "repo",
+      "tool": "mcp://workspace-code/delete_file",
+      "action": "delete",
+      "resource": "repo:acme/api",
+      "mcp": {
+        "server_id": "mcp://workspace-code",
+        "tool_name": "delete_file",
+        "annotations_trusted": false,
+        "annotations": { "readOnlyHint": false, "destructiveHint": true }
+      },
+      "expected": "deny"
+    }
+  ]
+}
