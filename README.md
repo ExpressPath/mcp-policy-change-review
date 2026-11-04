@@ -29,16 +29,16 @@ jobs:
       - uses: actions/checkout@v5
       # Install and checksum-verify the OPA/Cedar binaries required by your manifest.
       - name: Review MCP changes across policy planes
-        uses: ExpressPath/mcp-policy-change-review@<full-commit-sha>
+        uses: ExpressPath/mcp-policy-change-review@bb6b99882dce587948b50354cde649b804e457e6
         with:
-          manifest: examples/mcp-multi-review.json
+          manifest: examples/multi-plane/mcp-multi-review.json
           require-common-cases: 'true'
           require-policy-coverage: 'true'
           fail-on-unexpected-new-allow: 'true'
           fail-on-candidate-divergence: 'true'
 ```
 
-Replace the owner/repository and placeholder SHA after a public release. Pin third-party actions to a reviewed full commit SHA under your organization's secure-use policy. The example assumes the sample manifest and all referenced policy, fixture, and snapshot paths are checked into the workflow repository.
+This example pins the immutable full commit SHA for the published pre-release `v0.1.0`; review any later commit before updating it. Copy `examples/multi-plane/` into your workflow repository because the Action reads the manifest, policy, fixture, and snapshot files from that checkout. Pin third-party Actions and policy-engine downloads to versions reviewed under your organization's secure-use policy.
 
 ## Manifest
 
