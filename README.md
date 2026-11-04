@@ -60,4 +60,4 @@ The source is available under [Apache-2.0](LICENSE). The separate [End User Lice
 
 ## Current release state
 
-A `v0.1.0` release is prepared as a GitHub draft and is not yet published to the Marketplace. Do not use `@main` as a production dependency. On 2026-11-04, local synthetic OPA 1.22.0 and Cedar 4.14.1 multi-plane examples passed through the Action entrypoint; the deliberate OPA drift sample failed as expected, and an outside-workspace path was rejected. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
+The immutable `v0.1.0` pre-release is published on GitHub, but the GitHub Marketplace listing is not yet published. Do not use `@main` as a production dependency. On 2026-11-04, local synthetic OPA 1.22.0 and Cedar 4.14.1 multi-plane examples passed through the Action entrypoint; the deliberate OPA drift sample failed as expected, and an outside-workspace path was rejected. A clean customer-repository install and security review beyond static self-review remain outstanding. No customer has validated the workflow or willingness to pay.
