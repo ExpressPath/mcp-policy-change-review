@@ -38,13 +38,16 @@ jobs:
           require-policy-coverage: 'true'
           fail-on-unexpected-new-allow: 'true'
           fail-on-candidate-divergence: 'true'
+          report-file: mcp-policy-review.json
 ```
 
 This example pins the immutable full commit SHA for the published pre-release `v0.1.1` (`fa5a14b68df3d1b20527b861d09ee163919ee660`); review any later commit before updating it. Copy `examples/multi-plane/` into your workflow repository because the Action reads the manifest, policy, fixture, and snapshot files from that checkout. Pin third-party Actions and policy-engine downloads to versions reviewed under your organization's secure-use policy.
 
+When `report-file` is set and all policy-plane executions complete, the Action writes the complete machine-readable JSON report to a new path inside `GITHUB_WORKSPACE` while still adding the human-readable summary to the job. The parent directory must already exist, the target file must not exist, and the Action will not overwrite it. Engine execution errors still produce the human-readable summary but do not produce a JSON file. The `report-path` output contains the supplied path for completed reviews; upload it only through a separate workflow step if your repository's evidence-retention policy allows that. The report contains case IDs, decisions, change summaries, and hashes, but no raw policies or fixtures. Its fingerprint is unsigned and is not an approval or provenance attestation.
+
 ## Manifest
 
-The [OPA sample manifest](examples/multi-plane/mcp-multi-review.json) runs the same synthetic scenarios against two separately configured OPA planes. Its companion [`mcp-multi-review-drift.json`](examples/multi-plane/mcp-multi-review-drift.json) contains an intentional regional over-permission regression. The [Cedar sample manifest](examples/multi-plane/mcp-multi-review-cedar.json) runs the same synthetic MCP inventory change and five Cedar scenarios in two separately named policy planes. Run either manifest with `--format github` to see the report locally.
+The [OPA sample manifest](examples/multi-plane/mcp-multi-review.json) runs the same synthetic scenarios against two separately configured OPA planes. Its companion [`mcp-multi-review-drift.json`](examples/multi-plane/mcp-multi-review-drift.json) contains an intentional regional over-permission regression. The [Cedar sample manifest](examples/multi-plane/mcp-multi-review-cedar.json) runs the same synthetic MCP inventory change and five Cedar scenarios in two separately named policy planes. Run either manifest with `--format github` to see the report locally; add `--report-file <new-path>` to save a JSON copy inside the workspace.
 
 Each manifest supports 2–32 control planes. Relative paths resolve from the manifest file; absolute paths are also accepted when they remain inside `GITHUB_WORKSPACE`. The action canonicalizes paths and rejects a manifest, policy, fixture, snapshot, or data path that resolves outside the checked-out workspace, including a symlink that points outside it. Each plane provides baseline and candidate MCP snapshots, baseline and candidate policies, a fixture file, and optional OPA/Cedar-specific settings. Fixture `id` values must mean the same authorization scenario in each plane; the action does not infer scenario equivalence.
 

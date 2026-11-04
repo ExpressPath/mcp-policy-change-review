@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { closeSync, existsSync, lstatSync, openSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFixtureSet } from './fixtures.js';
 import { spawnSync } from 'node:child_process';
@@ -11,7 +11,7 @@ const root = resolve(here, '..');
 const cli = join(root, 'bin', 'agent-policy-check.js');
 const maxManifestBytes = 1024 * 1024;
 const maxSourceBytes = 256 * 1024 * 1024;
-const valueOptions = new Set(['--manifest', '--format']);
+const valueOptions = new Set(['--manifest', '--format', '--report-file']);
 const flagOptions = new Set([
   '--require-policy-coverage', '--fail-on-unexpected-new-allow', '--fail-on-any-policy-change',
   '--fail-on-candidate-divergence', '--fail-on-transition-divergence', '--allow-missing-cases',
@@ -45,6 +45,40 @@ function resolveWorkspacePath(value, label, baseDirectory, workspaceRoot) {
     throw new Error(label + ' must resolve to a path inside the GitHub workspace.');
   }
   return canonicalPath;
+}
+
+function resolveReportPath(value, baseDirectory, workspaceRoot) {
+  requireString(value, 'report file');
+  if (/[\r\n]/.test(value)) throw new Error('The report file path cannot contain line breaks.');
+  const candidate = isAbsolute(value) ? resolve(value) : resolve(baseDirectory, value);
+  const relativeCandidate = relative(workspaceRoot, candidate);
+  if (!relativeCandidate || relativeCandidate === '..' || relativeCandidate.startsWith('..' + sep) || isAbsolute(relativeCandidate)) {
+    throw new Error('The report file must resolve to a new file inside the GitHub workspace.');
+  }
+  const parentPath = realpathSync(dirname(candidate));
+  const relativeParent = relative(workspaceRoot, parentPath);
+  if (relativeParent === '..' || relativeParent.startsWith('..' + sep) || isAbsolute(relativeParent)) {
+    throw new Error('The report file must resolve to a new file inside the GitHub workspace.');
+  }
+  const reportPath = resolve(parentPath, basename(candidate));
+  try {
+    const existing = lstatSync(reportPath);
+    if (existing.isSymbolicLink()) throw new Error('The report file cannot overwrite a symbolic link.');
+    if (!existing.isFile()) throw new Error('The report file must be a new regular file.');
+    throw new Error('The report file already exists; choose a fresh path so the Action never overwrites workspace content.');
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return reportPath;
+    throw error;
+  }
+}
+
+function writeReportFile(reportPath, report) {
+  const descriptor = openSync(reportPath, 'wx', 0o600);
+  try {
+    writeFileSync(descriptor, JSON.stringify(report, null, 2) + '\n', { encoding: 'utf8' });
+  } finally {
+    closeSync(descriptor);
+  }
 }
 
 function parseOptions(args) {
@@ -421,6 +455,9 @@ function main() {
     const format = options.get('--format') ?? 'text';
     if (!['text', 'json', 'github'].includes(format)) throw new Error('--format must be "text", "json", or "github".');
     const workspaceRoot = realpathSync(process.env.GITHUB_WORKSPACE || process.cwd());
+    const reportPath = options.has('--report-file')
+      ? resolveReportPath(options.get('--report-file'), process.cwd(), workspaceRoot)
+      : undefined;
     const manifestPath = resolveWorkspacePath(options.get('--manifest'), 'manifest', process.cwd(), workspaceRoot);
     const { manifest, bytes } = loadManifest(manifestPath);
     const manifestDirectory = dirname(manifestPath);
@@ -510,6 +547,7 @@ function main() {
     if (format === 'json') console.log(JSON.stringify(report, null, 2));
     else if (format === 'github') process.stdout.write(renderGitHub(report));
     else console.log(renderText(report));
+    if (reportPath && errorPlanes === 0) writeReportFile(reportPath, report);
     if (!summary.passed) process.exitCode = errorPlanes > 0 ? 2 : 1;
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

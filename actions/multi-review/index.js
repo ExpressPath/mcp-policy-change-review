@@ -41,7 +41,10 @@ function main() {
     const failAnyChange = booleanInput('fail-on-any-policy-change');
     const failCandidateDivergence = booleanInput('fail-on-candidate-divergence');
     const failTransitionDivergence = booleanInput('fail-on-transition-divergence');
+    const reportFile = input('report-file');
+    if (/[\r\n]/.test(reportFile)) throw new Error('Action input "report-file" cannot contain line breaks.');
     args = ['mcp-multi-review', '--manifest', input('manifest'), '--format', 'github'];
+    if (reportFile) args.push('--report-file', reportFile);
     if (!requireCommon) args.push('--allow-missing-cases');
     if (requireCoverage) args.push('--require-policy-coverage');
     if (failNewAllow) args.push('--fail-on-unexpected-new-allow');
@@ -78,6 +81,8 @@ function main() {
   const exitCode = child.status ?? 2;
   appendOutput('passed', exitCode === 0 ? 'true' : 'false');
   appendOutput('exit-code', String(exitCode));
+  const reportFile = input('report-file');
+  if (reportFile && (exitCode === 0 || exitCode === 1)) appendOutput('report-path', reportFile);
   if (exitCode !== 0) process.exitCode = exitCode;
 }
 

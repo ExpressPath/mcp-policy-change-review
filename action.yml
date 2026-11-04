@@ -32,11 +32,17 @@ inputs:
     description: Fail when a shared scenario has different baseline-to-candidate transitions
     required: false
     default: 'false'
+  report-file:
+    description: Optional JSON evidence report path inside the GitHub workspace; the target must not already exist
+    required: false
+    default: ''
 outputs:
   passed:
     description: Whether every policy plane review and configured gate passed
   exit-code:
     description: Exit code from the multi-plane review command
+  report-path:
+    description: Relative or absolute workspace path of the JSON report when policy-plane execution completes
 runs:
   using: node24
   main: actions/multi-review/index.js

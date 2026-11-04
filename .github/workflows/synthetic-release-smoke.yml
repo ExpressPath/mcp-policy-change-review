@@ -46,12 +46,53 @@ jobs:
           "$RUNNER_TEMP/cedar/cedar" --version
 
       - name: Review synthetic OPA planes with this Action
+        id: opa-review
         uses: ./
         with:
           manifest: examples/multi-plane/mcp-multi-review.json
           require-common-cases: 'true'
           require-policy-coverage: 'true'
           fail-on-unexpected-new-allow: 'true'
+          report-file: synthetic-opa-report.json
+
+      - name: Check the machine-readable OPA report
+        shell: bash
+        env:
+          REPORT_PATH: ${{ steps.opa-review.outputs.report-path }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          test "$REPORT_PATH" = 'synthetic-opa-report.json'
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const report = JSON.parse(readFileSync(process.env.REPORT_PATH, 'utf8'));
+          if (report.engine !== 'mcp-multi-review' || report.summary.passed !== true || report.evidence.signed !== false) {
+            throw new Error('The generated JSON report did not match the expected synthetic OPA review.');
+          }
+          NODE
+
+      - name: Reject unsafe or existing report paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          existing_hash="$(sha256sum synthetic-opa-report.json | cut -d ' ' -f1)"
+          set +e
+          node bin/agent-policy-check.js mcp-multi-review \
+            --manifest examples/multi-plane/mcp-multi-review.json \
+            --report-file synthetic-opa-report.json --format github \
+            >"$RUNNER_TEMP/existing-report.log" 2>&1
+          existing_status=$?
+          node bin/agent-policy-check.js mcp-multi-review \
+            --manifest examples/multi-plane/mcp-multi-review.json \
+            --report-file ../outside-workspace-report.json --format github \
+            >"$RUNNER_TEMP/outside-report.log" 2>&1
+          outside_status=$?
+          set -e
+          test "$existing_status" -eq 2
+          test "$outside_status" -eq 2
+          test "$(sha256sum synthetic-opa-report.json | cut -d ' ' -f1)" = "$existing_hash"
+          grep -F 'already exists' "$RUNNER_TEMP/existing-report.log"
+          grep -F 'inside the GitHub workspace' "$RUNNER_TEMP/outside-report.log"
 
       - name: Review synthetic Cedar planes with this Action
         uses: ./
@@ -71,13 +112,23 @@ jobs:
           require-policy-coverage: 'true'
           fail-on-unexpected-new-allow: 'true'
           fail-on-candidate-divergence: 'true'
+          report-file: synthetic-opa-drift-report.json
 
       - name: Assert regression result
         shell: bash
         env:
           DRIFT_OUTCOME: ${{ steps.expected-drift.outcome }}
           DRIFT_EXIT_CODE: ${{ steps.expected-drift.outputs.exit-code }}
+          DRIFT_REPORT_PATH: ${{ steps.expected-drift.outputs.report-path }}
         run: |
           set -euo pipefail
           test "$DRIFT_OUTCOME" = failure
           test "$DRIFT_EXIT_CODE" = 1
+          test "$DRIFT_REPORT_PATH" = 'synthetic-opa-drift-report.json'
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const report = JSON.parse(readFileSync(process.env.DRIFT_REPORT_PATH, 'utf8'));
+          if (report.summary.passed !== false || report.summary.candidate_divergences < 1) {
+            throw new Error('The drift report did not record the expected divergence.');
+          }
+          NODE
