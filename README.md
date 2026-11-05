@@ -45,6 +45,35 @@ This example pins the immutable full commit SHA `9c8a8db9e5fea7b108606ff9f66d119
 
 When `report-file` is set and all policy-plane executions complete, the Action writes the complete machine-readable JSON report to a new path inside `GITHUB_WORKSPACE` while still adding the human-readable summary to the job. The parent directory must already exist, the target file must not exist, and the Action will not overwrite it. Engine execution errors still produce the human-readable summary but do not produce a JSON file. The `report-path` output contains the supplied path for completed reviews; upload it only through a separate workflow step if your repository's evidence-retention policy allows that. The report contains case IDs, decisions, change summaries, and hashes, but no raw policies or fixtures. Its fingerprint is unsigned and is not an approval or provenance attestation.
 
+### Optional GitHub artifact attestation
+
+For a retained release-review report, a repository can add a GitHub artifact attestation after the Action writes the JSON file. Add these permissions to the review job (keep them scoped to this job):
+
+```yaml
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+```
+
+After the review step that writes `mcp-policy-review.json`, add:
+
+```yaml
+- name: Attest the policy review report
+  uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+  with:
+    subject-path: mcp-policy-review.json
+```
+
+Verify the retained report from an environment with access to the repository:
+
+```sh
+gh attestation verify mcp-policy-review.json -R OWNER/REPOSITORY
+```
+
+This lets GitHub CLI verify the report's digest and its workflow provenance, including the repository and commit that produced it. It does not prove that the supplied policy fixtures or scenarios are correct, complete, representative, or safe; it also does not replace human approval. The report itself is not retained by this step, so store it separately only when your evidence-retention policy permits. GitHub recommends verifying attestations and advises against signing frequent builds used only for automated testing; use this for deliberately retained review evidence rather than every routine CI run. Attestation records and commands are subject to GitHub's repository visibility and trust-root behavior. See [GitHub artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [`actions/attest` usage](https://github.com/actions/attest#usage), and [verification](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-attestations).
+
 ## Manifest
 
 The [OPA sample manifest](examples/multi-plane/mcp-multi-review.json) runs the same synthetic scenarios against two separately configured OPA planes. Its companion [`mcp-multi-review-drift.json`](examples/multi-plane/mcp-multi-review-drift.json) contains an intentional regional over-permission regression. The [Cedar sample manifest](examples/multi-plane/mcp-multi-review-cedar.json) runs the same synthetic MCP inventory change and five Cedar scenarios in two separately named policy planes. Run either manifest with `--format github` to see the report locally; add `--report-file <new-path>` to save a JSON copy inside the workspace.
